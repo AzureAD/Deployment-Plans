@@ -95,7 +95,7 @@ a workstation or server where Excel is installed.
 
 Anytime you want to refresh your data, just make sure that the latest .csv files are located within c:\\ADFS and from the Dashboard tab, just hit the ‘Refresh Data’ button:
 
-![](media/image1.png)
+![](Media/image1.png)
 
 ### **Viewing Your All-Up Results**
 
