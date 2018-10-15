@@ -101,13 +101,13 @@ Anytime you want to refresh your data, just make sure that the latest .csv files
 
 The first tab you’ll want to review is the ‘Dashboard’ tab to see an all-up view of how many applications you have and whether they can migrate to Azure AD or not:
 
-![](media/image2.png)
+![](Media/image2.png)
 
 ### **Viewing Individual Application Results**
 
 Next, you’ll want to look at the individual status on each application on the ‘AAD App Migration Report’ tab. This will tell you whether the application will readily migrate to Azure AD or whether there are settingd on the application that are currently incompatible with Azure AD or need to be reviewed further.
 
-![](media/image3.png)
+![](Media/image3.png)
 
 As you can see here, both 7FAM applications passed and can be readily migrate to Azure AD but the remaining three applications have some items on them that could prevent them from being moved to Azure AD.
 
@@ -136,7 +136,7 @@ Additionally, from this same tab, we include the following items per application
     custom attribute stores so if you’re using anything beyond ‘Active
     Directory’ within your claim rules, we give you that count here.
 
-![](media/image4.png)
+![](Media/image4.png)
 
 ### **Viewing All your Claim Rules**
 
@@ -158,7 +158,7 @@ If you want more detail on all your claim rules across all your applications, na
     the name of the rule that the claim rule matched. Only present if
     the rule passed.
 
-![](media/image5.png)
+![](Media/image5.png)
 
 ### **Viewing All your AD Attributes within your Claim Rules**
 
@@ -182,7 +182,7 @@ If you want more detail on all the AD attributes in use across all your applicat
 -   **Note:** We highlight (in red) where the AD attribute is in use
     within the claim rule.
 
-![](media/image6.png)
+![](Media/image6.png)
 
 ### **Viewing All your Claim Type URI’s within your Claim Rules**
 
@@ -202,7 +202,7 @@ If you want more detail on all the individual claim types URI’s in use across 
 -   **Note:** We highlight (in red) where the Claim Type URI is in use
     within the claim rule.
 
-![](media/image7.png)
+![](Media/image7.png)
 
 ### **Viewing All your Attribute Stores within your Claim Rules**
 
@@ -220,21 +220,21 @@ If you want more detail on all the Attribute Stores in use across all your appli
     2.0 concept that isn’t truly a blocker for moving an application to
     Azure AD.
 
-![](media/image8.png)
+![](Media/image8.png)
 
 ### **Modeling Change to your applications**
 
 We wanted to provide a way for customers to see the migration impact of changes they are willing to make to their applications without them actually having to make any changes. So back on the ‘Dashboard’ tab, you can type **Yes** next to the issues you’re willing to resolve and see how that impacts your migration %. Additionally, the issues impacting the most applications will highlight themselves in a light green like so:
 
-![](media/image9.png)
+![](Media/image9.png)
 
 Next, mark the items you are committing to resolve or features that may be coming as part of the Azure AD roadmap:
 
-![](media/image10.png)
+![](Media/image10.png)
 
 Upon doing so, the top of the ‘Dashboard’ tab will update to reflect your new migration % like so:
 
-![](media/image11.png)
+![](Media/image11.png)
 
 # **Viewing All Tests we Ran Your Applications Through**
 
