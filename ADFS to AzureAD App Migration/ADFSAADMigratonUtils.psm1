@@ -191,7 +191,11 @@ Function Invoke-ADFSClaimRuleAnalysis
         {
             $knownRuleRegex = $KnownRules[$knownRuleKey]
             $knownRuleRegex = [Regex]::Escape($knownRuleRegex).Replace("__ANYVALUE__", ".*").TrimEnd() 
-                        
+
+
+            #JSON files have \r\n instead or \n ... adding flexibility to match these
+            $knownRuleRegex = $knownRuleRegex.Replace("\n", "\r?\n*") 
+
             if ($rule -match $knownRuleRegex)
             {
                 $migratablePatternName = $knownRuleKey
@@ -430,7 +434,7 @@ Function Test-ADFSRPAdditionalWSFedEndpoint
 
     $TestResult = New-Object MigrationTestResult
 
-    if ($ADFSRelyingPartyTrust.AdditionalWSFedEndpoint.Count -gt 0) #TODO: CSV key to be empty would be "[]"
+    if ($ADFSRelyingPartyTrust.AdditionalWSFedEndpoint.Count -gt 0)  
     {
         $TestResult.Result = [ResultType]::Fail
         $TestResult.Message = "Relying Party has additional WS-Federation Endpoints."
@@ -457,7 +461,7 @@ Function Test-ADFSRPAllowedAuthenticationClassReferences
 
     $TestResult = New-Object MigrationTestResult
 
-    if ($ADFSRelyingPartyTrust.AllowedAuthenticationClassReferences.Count -gt 0) #For csv, the value from kusto is "[]"
+    if ($ADFSRelyingPartyTrust.AllowedAuthenticationClassReferences.Count -gt 0)  
     {
         $TestResult.Result = [ResultType]::Fail
         $TestResult.Message = "Relying Party has set AllowedAuthenticationClassReferences."
@@ -484,7 +488,7 @@ Function Test-ADFSRPAlwaysRequireAuthentication
 
     $TestResult = New-Object MigrationTestResult
 
-    if ($ADFSRelyingPartyTrust.AlwaysRequireAuthentication) #CSV: false comes as string "0"
+    if ($ADFSRelyingPartyTrust.AlwaysRequireAuthentication)  
     {
         $TestResult.Result = [ResultType]::Fail
         $TestResult.Message = "Relying Party has AlwaysRequireAuthentication enabled"        
@@ -539,7 +543,7 @@ Function Test-ADFSRPClaimsProviderName
     $TestResult = New-Object MigrationTestResult
     $TestResult.Details.Add("ClaimsProviderName.Count", $ADFSRelyingPartyTrust.ClaimsProviderName.Count)
      
-    if ($ADFSRelyingPartyTrust.ClaimsProviderName.Count -gt 1) #CSV: Kusto comes with a array syntax
+    if ($ADFSRelyingPartyTrust.ClaimsProviderName.Count -gt 1) 
     {
         $TestResult.Result = [ResultType]::Fail
         $TestResult.Message = "Relying Party has multiple ClaimsProviders enabled"        
@@ -572,18 +576,46 @@ Function Test-ADFSRPEncryptClaims
 
     #CSV: "0" string is false
 
-    if (($ADFSRelyingPartyTrust.EncryptClaims -or $ADFSRelyingPartyTrust.EncryptedNameIdRequired) -and $ADFSRelyingPartyTrust.EncryptionCertificate -ne $null)
+    if ($ADFSRelyingPartyTrust.EncryptClaims -and $ADFSRelyingPartyTrust.EncryptionCertificate -ne $null)
     {
-        $TestResult.Result = [ResultType]::Fail
-        $TestResult.Message = "Relying Party is set to encrypt claims and/or nameid."
+        $TestResult.Result = [ResultType]::Pass
+        $TestResult.Message = "Relying Party is set to encrypt claims. This is supported by Azure AD"
         
     }
     else
     {
-        $TestResult.Message = "Relying Party is set to encrypt claims and/or nameid."
+        $TestResult.Message = "Relying Party is not set to encrypt claims."
     }
 
     $TestResult.Details.Add("EncryptClaims", $ADFSRelyingPartyTrust.EncryptClaims)
+
+    Return $TestResult
+}
+
+Function Test-ADFSRPEncryptedNameIdRequired
+{
+    [CmdletBinding()]
+    param
+    (    
+        [Parameter(Mandatory=$true)]
+        $ADFSRelyingPartyTrust
+    )
+
+    $TestResult = New-Object MigrationTestResult
+
+    #CSV: "0" string is false
+
+    if ($ADFSRelyingPartyTrust.EncryptedNameIdRequired -and $ADFSRelyingPartyTrust.EncryptionCertificate -ne $null)
+    {
+        $TestResult.Result = [ResultType]::Fail
+        $TestResult.Message = "Relying Party is set to encrypt Name ID."
+        
+    }
+    else
+    {
+        $TestResult.Message = "Relying Party is not set to encrypt name ID."
+    }
+
     $TestResult.Details.Add("EncryptedNameIdRequired", $ADFSRelyingPartyTrust.EncryptedNameIdRequired)
 
     Return $TestResult
@@ -683,7 +715,7 @@ Function Test-ADFSRPSignedSamlRequestsRequired
 
     if ($ADFSRelyingPartyTrust.SignedSamlRequestsRequired) #CSV: Boolean syntax
     {
-        $TestResult.Result = [ResultType]::Fail
+        $TestResult.Result = [ResultType]::Warning
         $TestResult.Message = "Relying Party has SignedSamlRequestsRequired set to true"
         
     }
@@ -807,7 +839,8 @@ Function Test-ADFS2AADOnPremRPTrust
         "Test-ADFSRPNotBeforeSkew",
         "Test-ADFSRPRequestMFAFromClaimsProviders",
         "Test-ADFSRPSignedSamlRequestsRequired",
-        "Test-ADFSRPTokenLifetime"
+        "Test-ADFSRPTokenLifetime",
+        "Test-ADFSRPEncryptedNameIdRequired"
     );
 
     $rpTestResults  =  Invoke-TestFunctions -FunctionsToRun $functionsToRun -ADFSRelyingPartyTrust $ADFSRPTrust
@@ -974,9 +1007,9 @@ Function Test-ADFS2AADOnPremRPTrustSet
         [String]
         $RPXMLFileDirectory,
 
-        [Parameter(Mandatory=$true, ParameterSetName="RPCSVFilePath")]
+        [Parameter(Mandatory=$true, ParameterSetName="RPJSONFilePath")]
         [String]
-        $RPCSVFilePath
+        $RPJSONFilePath
     )
 
     $trustSetTestOutput = @()
@@ -1002,18 +1035,127 @@ Function Test-ADFS2AADOnPremRPTrustSet
 
             $trustSetTestOutput += $rpTestResults
         }
-    } elseif ( $PSCmdlet.ParameterSetName -eq "RPCSVFilePath" ) 
+    } elseif ( $PSCmdlet.ParameterSetName -eq "RPJSONFilePath" ) 
     {
-        $RPTrusts = Get-Content -Path $RPCSVFilePath -Raw | ConvertFrom-Csv
+        $JsonRPs = Get-Content -Path $RPJSONFilePath -Raw | ConvertFrom-Json 
 
-        $totalRPs = $RPTrusts.Count
+        $first = $true #REMOVE this
+
+        $JSONRPRows = $JsonRPs.Rows #| Select-Object -First 100
+
+        $totalRPs = $JSONRPRows.Count
         $rpCount = 0
+
+        $ComplexProperties = @(
+            "AccessControlPolicyParameters",       #System.Object AccessControlPolicyParameters {get;}                                                                                                
+            "AdditionalWSFedEndpoint",             #System.Collections.ObjectModel.ReadOnlyCollection[string] AdditionalWSFedEndpoint {get;}    
+            "AllowedAuthenticationClassReferences",#string[] AllowedAuthenticationClassReferences {get;}                                                       
+            "ClaimsAccepted",                      #Microsoft.IdentityServer.Management.Resources.ClaimDescription[] ClaimsAccepted {get;}                                                            
+            "ClaimsProviderName",                  #string[] ClaimsProviderName {get;}
+            "EncryptionCertificate",               #System.Security.Cryptography.X509Certificates.X509Certificate2 EncryptionCertificate {get;}                                                       
+            #"Identifier"                          #System.Collections.ObjectModel.ReadOnlyCollection[string] Identifier {get;}                                                                       
+            "ProxyEndpointMappings"                #System.Collections.Generic.Dictionary[string,string] ProxyEndpointMappings {get;set;}                                                             
+            "ProxyTrustedEndpoints"                #System.Collections.ObjectModel.ReadOnlyCollection[string] ProxyTrustedEndpoints {get;}                                                            
+            "RequestSigningCertificate"            #System.Collections.ObjectModel.ReadOnlyCollection[System.Security.Cryptography.X509Certificates.X509Certificate2] RequestSigningCertificate {get;}
+            "ResultantPolicy"                      #Microsoft.IdentityServer.PolicyModel.Configuration.PolicyTemplate.PolicyMetadata ResultantPolicy {get;}                                           
+            "SamlEndpoints"                        #Microsoft.IdentityServer.Management.Resources.SamlEndpoint[] SamlEndpoints {get;}                                                                 
+
+        );
+
+
+        $BooleanProperties = @(
+            "AlwaysRequireAuthentication",        #bool AlwaysRequireAuthentication {get;set;}                    
+            "AutoUpdateEnabled",                  #bool AutoUpdateEnabled {get;set;}                              
+            "ConflictWithPublishedPolicy",        #bool ConflictWithPublishedPolicy {get;}                        
+            "Enabled",                            #bool Enabled {get;}                                            
+            "EnableJWT",                          #bool EnableJWT {get;}                                          
+            "EncryptClaims",                      #bool EncryptClaims {get;}                                      
+            "EncryptedNameIdRequired",            #bool EncryptedNameIdRequired {get;}                            
+            #"LastPublishedPolicyCheckSuccessful", #System.Nullable[bool] LastPublishedPolicyCheckSuccessful {get;} ##
+            "MonitoringEnabled",                  #bool MonitoringEnabled {get;}                                  
+            "PublishedThroughProxy",              #bool PublishedThroughProxy {get;}                              
+            "RefreshTokenProtectionEnabled",      #bool RefreshTokenProtectionEnabled {get;} : ##BUGBUG: AADCH seems to return this as an empty string.
+            "RequestMFAFromClaimsProviders",      #bool RequestMFAFromClaimsProviders {get;}   ##BUGBUG: AADCH seems to return this as an empty string.                   
+            "SignedSamlRequestsRequired"          #bool SignedSamlRequestsRequired {get;}                                                            
+
+        );
+
+        $IntProperties = @(
+            "NotBeforeSkew", #int NotBeforeSkew {get;}
+            "TokenLifetime" #int TokenLifetime {get;}
+        );
+
     
-    
-        foreach($ADFSRPTrust in $RPTrusts) 
+        foreach($JsonRPRow in $JSONRPRows) 
         {
+            $ADFSRPTrust = New-Object -TypeName PSObject
+
+            $propertyCount = 0
+            foreach ($JsonRPColumn in $JsonRPs.Columns)
+            {
+                $PropertyName = $JsonRPColumn.ColumnName
+                $PropertyValue = $JsonRPRow[$propertyCount]
+
+                if ($PropertyName -in $ComplexProperties)
+                {
+                    try {
+                    $PropertyValue = ConvertFrom-Json -InputObject $PropertyValue
+                    }
+                    catch
+                    {
+                        Write-Debug "Error trying to convert from JSON property $PropertyName with value $PropertyValue"
+                    }
+                }
+
+                if ($PropertyName -in $BooleanProperties)
+                {
+                    try {
+                        $PropertyValue = [System.Convert]::ToBoolean($PropertyValue)
+                    }
+                    catch
+                    {
+                        Write-Debug "Error trying to convert from boolean property $PropertyName with value $PropertyValue"
+                        $PropertyValue = $false #If missing, we will default as false
+                    }
+                }
+
+                if ($PropertyName -in $IntProperties)
+                {
+                    try {
+                    $PropertyValue = [System.Convert]::ToInt32($PropertyValue)
+                    }
+                    catch
+                    {
+                        Write-Host "Error trying to convert from int property $PropertyName with value $PropertyValue"
+                    }
+                }
+
+                $ADFSRPTrust | Add-Member -MemberType NoteProperty -Name $PropertyName -Value $PropertyValue
+                $propertyCount++
+            }
+            <#
+            if ($first)
+            {
+                Write-Output $ADFSRPTrust | Get-Member
+                Write-Output $ADFSRPTrust
+                Write-Output $ADFSRPTrust.AlwaysRequireAuthentication
+                if ($ADFSRPTrust.AlwaysRequireAuthentication)
+                {
+                    "AlwaysRequireAuthentication: True"
+                }
+                else
+                {
+                    "AlwaysRequireAuthentication: False"
+                }
+                Return
+                
+                $first = $false
+            }#>
+
             $rpCount++
             $percent = 100 * $rpCount / $totalRPs
+
+            
 
             $RPTrustName = $ADFSRPTrust.Name
             Write-Progress -Activity "Analyzing Relying Parties" -Status "Processing app $RPTrustName" -PercentComplete $percent -Id 1
@@ -1092,3 +1234,4 @@ Function Export-ADFS2AADOnPremConfiguration
 Export-ModuleMember Export-ADFS2AADOnPremConfiguration
 Export-ModuleMember Test-ADFS2AADOnPremRPTrust
 Export-ModuleMember Test-ADFS2AADOnPremRPTrustSet
+
