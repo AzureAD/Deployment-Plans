@@ -1027,7 +1027,7 @@ Function Test-ADFS2AADOnPremRPTrustSet
             $percent = 100 * $rpCount / $totalRPs
             
             
-            $ADFSRPTrust = Import-clixml $fileName
+            $ADFSRPTrust = Import-clixml -LiteralPath $fileName
             $RPTrustName = $ADFSRPTrust.Name 
             
             Write-Progress -Activity "Analyzing Relying Parties" -Status "Processing $RPTrustName" -PercentComplete $percent -Id 1
