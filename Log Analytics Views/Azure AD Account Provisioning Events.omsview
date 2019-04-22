@@ -63,7 +63,7 @@
                                         "Subtitle": "Account provisioning"
                                     },
                                     "LineChart": {
-                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result == 0 | mvexpand AdditionalDetails | where AdditionalDetails.value == \"EntryExportAdd\" | summarize toint(count()) by bin(TimeGenerated, 1h)",
+                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result contains \"success\" | mvexpand AdditionalDetails | where AdditionalDetails.value == \"EntryExportAdd\" | summarize toint(count()) by bin(TimeGenerated, 1h)",
                                         "Callout": {
                                             "Title": "Total successful adds",
                                             "Series": "",
@@ -81,15 +81,15 @@
                                         "NavigationSelect": {}
                                     },
                                     "List": {
-                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result == 0 | mvexpand AdditionalDetails | where AdditionalDetails.value == \"EntryExportAdd\" | mvexpand TargetResources | extend appName = tostring(TargetResources.displayName) | where appName !contains \"@\" | summarize toint(count()) by appName",
+                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result contains \"success\" | mvexpand AdditionalDetails | where AdditionalDetails.value == \"EntryExportAdd\" | mvexpand TargetResources | extend appName = tostring(TargetResources.displayName) | where appName !contains \"@\" | summarize toint(count()) by appName",
                                         "HideGraph": false,
                                         "enableSparklines": true,
-                                        "operation": "Sum",
                                         "ColumnsTitle": {
                                             "Name": "App",
                                             "Value": "Add Operations"
                                         },
                                         "Color": "#55d455",
+                                        "operation": "Sum",
                                         "thresholds": {
                                             "isEnabled": false,
                                             "values": [
@@ -114,9 +114,9 @@
                                             ]
                                         },
                                         "NameDSVSeparator": "",
-                                        "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result == 1         | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) == \"EntryExportAdd\"     | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2",
+                                        "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result contains \"success\"         | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) == \"EntryExportAdd\"     | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2",
                                         "NavigationSelect": {
-                                            "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result == 1         | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) == \"EntryExportAdd\"     | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2"
+                                            "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result contains \"success\"         | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) == \"EntryExportAdd\"     | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2"
                                         }
                                     }
                                 }
@@ -137,7 +137,7 @@
                                         "Subtitle": "Account Provisioning"
                                     },
                                     "LineChart": {
-                                        "Query": "AuditLogs | where OperationName == \"Export\" | extend appName = tostring(TargetResources.displayName) | mvexpand AdditionalDetails | where appName !contains \"@\" and appName !contains \"Self-Service\" and appName !contains \"whatever\" and AdditionalDetails.value == \"EntryExportAdd\" and Result == 1 | summarize count() by bin(TimeGenerated, 1h)",
+                                        "Query": "AuditLogs | where OperationName == \"Export\" | extend appName = tostring(TargetResources.displayName) | mvexpand AdditionalDetails | where appName !contains \"@\" and appName !contains \"Self-Service\" and appName !contains \"whatever\" and AdditionalDetails.value == \"EntryExportAdd\" and Result contains \"failure\" | summarize count() by bin(TimeGenerated, 1h)",
                                         "Callout": {
                                             "Title": "Total failed adds",
                                             "Series": "",
@@ -155,10 +155,9 @@
                                         "NavigationSelect": {}
                                     },
                                     "List": {
-                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result == 1 | mvexpand AdditionalDetails | where AdditionalDetails.value == \"EntryExportAdd\" | mvexpand TargetResources | extend appName = tostring(TargetResources.displayName) | where appName !contains \"@\" and appName !contains \"Self-Service\" and appName !contains \"whatever\"    | summarize count() by appName",
+                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result contains \"failure\" | mvexpand AdditionalDetails | where AdditionalDetails.value == \"EntryExportAdd\" | mvexpand TargetResources | extend appName = tostring(TargetResources.displayName) | where appName !contains \"@\" and appName !contains \"Self-Service\" and appName !contains \"whatever\"    | summarize count() by appName",
                                         "HideGraph": false,
                                         "enableSparklines": true,
-                                        "operation": "Summary",
                                         "ColumnsTitle": {
                                             "Name": "App",
                                             "Value": "Count"
@@ -188,9 +187,9 @@
                                             ]
                                         },
                                         "NameDSVSeparator": "",
-                                        "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result == 1         | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) == \"EntryExportAdd\"     | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2",
+                                        "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result contains \"failure\"       | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) == \"EntryExportAdd\"     | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2",
                                         "NavigationSelect": {
-                                            "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result == 1         | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) == \"EntryExportAdd\"     | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2"
+                                            "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result contains \"failure\"       | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) == \"EntryExportAdd\"     | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2"
                                         }
                                     }
                                 }
@@ -211,7 +210,7 @@
                                         "Subtitle": "Account Provisioning"
                                     },
                                     "LineChart": {
-                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result == 0 | mvexpand AdditionalDetails | where AdditionalDetails.value == \"EntryExportUpdate\"  | summarize count() by bin(TimeGenerated, 1h)",
+                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result contains \"success\" | mvexpand AdditionalDetails | where AdditionalDetails.value == \"EntryExportUpdate\"  | summarize count() by bin(TimeGenerated, 1h)",
                                         "Callout": {
                                             "Title": "Total successful updates",
                                             "Series": "",
@@ -229,10 +228,9 @@
                                         "NavigationSelect": {}
                                     },
                                     "List": {
-                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result == 0 | mvexpand AdditionalDetails | where AdditionalDetails.value == \"EntryExportUpdate\"  | mvexpand TargetResources | extend appName = tostring(TargetResources.displayName) | where appName !contains \"@\" | summarize count() by appName",
+                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result contains \"success\" | mvexpand AdditionalDetails | where AdditionalDetails.value == \"EntryExportUpdate\"  | mvexpand TargetResources | extend appName = tostring(TargetResources.displayName) | where appName !contains \"@\" | summarize count() by appName",
                                         "HideGraph": false,
                                         "enableSparklines": true,
-                                        "operation": "Summary",
                                         "ColumnsTitle": {
                                             "Name": "App",
                                             "Value": "Count"
@@ -262,9 +260,9 @@
                                             ]
                                         },
                                         "NameDSVSeparator": "",
-                                        "NavigationQuery": "let baseData = materialize( AuditLogs | where OperationName == \"Export\" | where Result == 0 | order by TimeGenerated desc | extend rn = row_number() ); let AuditLogsExpanded = materialize( baseData | mvexpand AdditionalDetails ); let entities = (){ AuditLogsExpanded | where tostring(AdditionalDetails.key) == \"JoiningProperty\" | project rn, entity = AdditionalDetails.value }; let userIds = (){ AuditLogsExpanded | where tostring(AdditionalDetails.value) == \"EntryExportUpdate\" | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName) | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1) | project rn, appName }; baseData | join kind=leftouter ( entities ) on rn | join kind=leftouter ( userIds ) on rn | where {selected item} | project-away rn, rn1, rn2",
+                                        "NavigationQuery": "let baseData = materialize( AuditLogs | where OperationName == \"Export\" | where Result contains \"success\"| order by TimeGenerated desc | extend rn = row_number() ); let AuditLogsExpanded = materialize( baseData | mvexpand AdditionalDetails ); let entities = (){ AuditLogsExpanded | where tostring(AdditionalDetails.key) == \"JoiningProperty\" | project rn, entity = AdditionalDetails.value }; let userIds = (){ AuditLogsExpanded | where tostring(AdditionalDetails.value) == \"EntryExportUpdate\" | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName) | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1) | project rn, appName }; baseData | join kind=leftouter ( entities ) on rn | join kind=leftouter ( userIds ) on rn | where {selected item} | project-away rn, rn1, rn2",
                                         "NavigationSelect": {
-                                            "NavigationQuery": "let baseData = materialize( AuditLogs | where OperationName == \"Export\" | where Result == 0 | order by TimeGenerated desc | extend rn = row_number() ); let AuditLogsExpanded = materialize( baseData | mvexpand AdditionalDetails ); let entities = (){ AuditLogsExpanded | where tostring(AdditionalDetails.key) == \"JoiningProperty\" | project rn, entity = AdditionalDetails.value }; let userIds = (){ AuditLogsExpanded | where tostring(AdditionalDetails.value) == \"EntryExportUpdate\" | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName) | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1) | project rn, appName }; baseData | join kind=leftouter ( entities ) on rn | join kind=leftouter ( userIds ) on rn | where {selected item} | project-away rn, rn1, rn2"
+                                            "NavigationQuery": "let baseData = materialize( AuditLogs | where OperationName == \"Export\" | where Result contains \"success\"| order by TimeGenerated desc | extend rn = row_number() ); let AuditLogsExpanded = materialize( baseData | mvexpand AdditionalDetails ); let entities = (){ AuditLogsExpanded | where tostring(AdditionalDetails.key) == \"JoiningProperty\" | project rn, entity = AdditionalDetails.value }; let userIds = (){ AuditLogsExpanded | where tostring(AdditionalDetails.value) == \"EntryExportUpdate\" | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName) | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1) | project rn, appName }; baseData | join kind=leftouter ( entities ) on rn | join kind=leftouter ( userIds ) on rn | where {selected item} | project-away rn, rn1, rn2"
                                         }
                                     }
                                 }
@@ -285,7 +283,7 @@
                                         "Subtitle": "Account provisioning"
                                     },
                                     "LineChart": {
-                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result == 1 | mvexpand AdditionalDetails | where AdditionalDetails.value == \"EntryExportUpdate\"  | summarize count() by bin(TimeGenerated, 1h)",
+                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result contains \"failure\"| mvexpand AdditionalDetails | where AdditionalDetails.value == \"EntryExportUpdate\"  | summarize count() by bin(TimeGenerated, 1h)",
                                         "Callout": {
                                             "Title": "Total failed updates",
                                             "Series": "",
@@ -303,10 +301,9 @@
                                         "NavigationSelect": {}
                                     },
                                     "List": {
-                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result == 1 | mvexpand AdditionalDetails | where AdditionalDetails.value == \"EntryExportUpdate\"  | mvexpand TargetResources | extend appName = tostring(TargetResources.displayName) | where appName !contains \"@\" | summarize count() by appName",
+                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result contains \"failure\" | mvexpand AdditionalDetails | where AdditionalDetails.value == \"EntryExportUpdate\"  | mvexpand TargetResources | extend appName = tostring(TargetResources.displayName) | where appName !contains \"@\" | summarize count() by appName",
                                         "HideGraph": false,
                                         "enableSparklines": true,
-                                        "operation": "Summary",
                                         "ColumnsTitle": {
                                             "Name": "App",
                                             "Value": "Count"
@@ -336,9 +333,9 @@
                                             ]
                                         },
                                         "NameDSVSeparator": "",
-                                        "NavigationQuery": "let baseData = materialize( AuditLogs | where OperationName == \"Export\" | where Result == 1 | order by TimeGenerated desc | extend rn = row_number() ); let AuditLogsExpanded = materialize( baseData | mvexpand AdditionalDetails ); let entities = (){ AuditLogsExpanded | where tostring(AdditionalDetails.key) == \"JoiningProperty\" | project rn, entity = AdditionalDetails.value }; let userIds = (){ AuditLogsExpanded | where tostring(AdditionalDetails.value) == \"EntryExportUpdate\" | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName) | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1) | project rn, appName }; baseData | join kind=leftouter ( entities ) on rn | join kind=leftouter ( userIds ) on rn | where {selected item} | project-away rn, rn1, rn2",
+                                        "NavigationQuery": "let baseData = materialize( AuditLogs | where OperationName == \"Export\" | where Result contains \"failure\" | order by TimeGenerated desc | extend rn = row_number() ); let AuditLogsExpanded = materialize( baseData | mvexpand AdditionalDetails ); let entities = (){ AuditLogsExpanded | where tostring(AdditionalDetails.key) == \"JoiningProperty\" | project rn, entity = AdditionalDetails.value }; let userIds = (){ AuditLogsExpanded | where tostring(AdditionalDetails.value) == \"EntryExportUpdate\" | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName) | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1) | project rn, appName }; baseData | join kind=leftouter ( entities ) on rn | join kind=leftouter ( userIds ) on rn | where {selected item} | project-away rn, rn1, rn2",
                                         "NavigationSelect": {
-                                            "NavigationQuery": "let baseData = materialize( AuditLogs | where OperationName == \"Export\" | where Result == 1 | order by TimeGenerated desc | extend rn = row_number() ); let AuditLogsExpanded = materialize( baseData | mvexpand AdditionalDetails ); let entities = (){ AuditLogsExpanded | where tostring(AdditionalDetails.key) == \"JoiningProperty\" | project rn, entity = AdditionalDetails.value }; let userIds = (){ AuditLogsExpanded | where tostring(AdditionalDetails.value) == \"EntryExportUpdate\" | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName) | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1) | project rn, appName }; baseData | join kind=leftouter ( entities ) on rn | join kind=leftouter ( userIds ) on rn | where {selected item} | project-away rn, rn1, rn2"
+                                            "NavigationQuery": "let baseData = materialize( AuditLogs | where OperationName == \"Export\" | where Result contains \"failure\" | order by TimeGenerated desc | extend rn = row_number() ); let AuditLogsExpanded = materialize( baseData | mvexpand AdditionalDetails ); let entities = (){ AuditLogsExpanded | where tostring(AdditionalDetails.key) == \"JoiningProperty\" | project rn, entity = AdditionalDetails.value }; let userIds = (){ AuditLogsExpanded | where tostring(AdditionalDetails.value) == \"EntryExportUpdate\" | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName) | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1) | project rn, appName }; baseData | join kind=leftouter ( entities ) on rn | join kind=leftouter ( userIds ) on rn | where {selected item} | project-away rn, rn1, rn2"
                                         }
                                     }
                                 }
@@ -359,7 +356,7 @@
                                         "Subtitle": "Account Provisioning"
                                     },
                                     "LineChart": {
-                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result == 0 | mvexpand AdditionalDetails | where AdditionalDetails.value in (\"EntryExportDelete\", \"EntryExportUpdateSoftDelete\") | summarize count() by bin(TimeGenerated, 1h)",
+                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result contains \"success\" | mvexpand AdditionalDetails | where AdditionalDetails.value in (\"EntryExportDelete\", \"EntryExportUpdateSoftDelete\") | summarize count() by bin(TimeGenerated, 1h)",
                                         "Callout": {
                                             "Title": "Total successful deletes",
                                             "Series": "",
@@ -377,10 +374,9 @@
                                         "NavigationSelect": {}
                                     },
                                     "List": {
-                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result == 0 | mvexpand AdditionalDetails | where AdditionalDetails.value in (\"EntryExportDelete\", \"EntryExportUpdateSoftDelete\") | mvexpand TargetResources | extend appName = tostring(TargetResources.displayName) | where appName !contains \"@\" | summarize count() by appName",
+                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result contains \"success\" | mvexpand AdditionalDetails | where AdditionalDetails.value in (\"EntryExportDelete\", \"EntryExportUpdateSoftDelete\") | mvexpand TargetResources | extend appName = tostring(TargetResources.displayName) | where appName !contains \"@\" | summarize count() by appName",
                                         "HideGraph": false,
                                         "enableSparklines": true,
-                                        "operation": "Summary",
                                         "ColumnsTitle": {
                                             "Name": "App",
                                             "Value": "Count"
@@ -410,9 +406,9 @@
                                             ]
                                         },
                                         "NameDSVSeparator": "",
-                                        "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result == 0         | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) in( \"EntryExportDelete\", \"EntryExportUpdateSoftDelete\")    | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2",
+                                        "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result contains \"success\"         | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) in( \"EntryExportDelete\", \"EntryExportUpdateSoftDelete\")    | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2",
                                         "NavigationSelect": {
-                                            "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result == 0         | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) in( \"EntryExportDelete\", \"EntryExportUpdateSoftDelete\")    | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2"
+                                            "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result contains \"success\"         | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) in( \"EntryExportDelete\", \"EntryExportUpdateSoftDelete\")    | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2"
                                         }
                                     }
                                 }
@@ -433,7 +429,7 @@
                                         "Subtitle": "Account provisioning"
                                     },
                                     "LineChart": {
-                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result == 1 | mvexpand AdditionalDetails | where AdditionalDetails.value in (\"EntryExportDelete\", \"EntryExportUpdateSoftDelete\") | summarize count() by bin(TimeGenerated, 1h)",
+                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result contains \"failure\" | mvexpand AdditionalDetails | where AdditionalDetails.value in (\"EntryExportDelete\", \"EntryExportUpdateSoftDelete\") | summarize count() by bin(TimeGenerated, 1h)",
                                         "Callout": {
                                             "Title": "Total failed deletes",
                                             "Series": "",
@@ -451,10 +447,9 @@
                                         "NavigationSelect": {}
                                     },
                                     "List": {
-                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result == 1 | mvexpand AdditionalDetails | where AdditionalDetails.value in (\"EntryExportDelete\", \"EntryExportUpdateSoftDelete\") | mvexpand TargetResources | extend appName = tostring(TargetResources.displayName) | where appName !contains \"@\" | summarize count() by appName",
+                                        "Query": "AuditLogs | where OperationName == \"Export\" | where Result contains \"failure\" | mvexpand AdditionalDetails | where AdditionalDetails.value in (\"EntryExportDelete\", \"EntryExportUpdateSoftDelete\") | mvexpand TargetResources | extend appName = tostring(TargetResources.displayName) | where appName !contains \"@\" | summarize count() by appName",
                                         "HideGraph": false,
                                         "enableSparklines": true,
-                                        "operation": "Summary",
                                         "ColumnsTitle": {
                                             "Name": "App",
                                             "Value": "Count"
@@ -484,9 +479,9 @@
                                             ]
                                         },
                                         "NameDSVSeparator": "",
-                                        "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result == 0         | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) in( \"EntryExportDelete\", \"EntryExportUpdateSoftDelete\")    | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2",
+                                        "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result contains \"failure\"         | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) in( \"EntryExportDelete\", \"EntryExportUpdateSoftDelete\")    | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2",
                                         "NavigationSelect": {
-                                            "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result == 0         | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) in( \"EntryExportDelete\", \"EntryExportUpdateSoftDelete\")    | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2"
+                                            "NavigationQuery": "let baseData = materialize(     AuditLogs     | where OperationName == \"Export\"     | where Result contains \"failure\"         | order by TimeGenerated desc      | extend rn = row_number()  ); let AuditLogsExpanded = materialize(     baseData     | mvexpand AdditionalDetails ); let entities = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.key) == \"JoiningProperty\"     | project rn, entity = AdditionalDetails.value }; let userIds = (){     AuditLogsExpanded     | where tostring(AdditionalDetails.value) in( \"EntryExportDelete\", \"EntryExportUpdateSoftDelete\")    | extend dn1 = tostring(TargetResources[0].displayName), dn2 = tostring(TargetResources[1].displayName)     | extend appName = iff(dn1 contains \"@\", iff(dn2 contains \"@\", \"N/A\", dn2), dn1)     | project rn, appName }; baseData | join kind=leftouter (     entities ) on rn | join kind=leftouter (     userIds ) on rn | where {selected item} | project-away rn, rn1, rn2"
                                         }
                                     }
                                 }
