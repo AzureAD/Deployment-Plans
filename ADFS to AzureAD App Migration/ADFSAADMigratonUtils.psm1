@@ -1205,7 +1205,7 @@ Function Export-ADFS2AADOnPremConfiguration
         $CleanedRPFileName = Remove-InvalidFileNameChars -Name $RPfileName
         $RPName = "RPT - " + $CleanedRPFileName
         $filePath = $filePathBase + $RPName + '.xml'
-        $AdfsRelyingPartyTrust | Export-Clixml $filePath -ErrorAction SilentlyContinue
+        $AdfsRelyingPartyTrust | Export-Clixml -LiteralPath $filePath -ErrorAction SilentlyContinue
     }
 
     $AdfsClaimsProviderTrusts = Get-AdfsClaimsProviderTrust
@@ -1216,7 +1216,7 @@ Function Export-ADFS2AADOnPremConfiguration
         $CleanedCPFileName = Remove-InvalidFileNameChars -Name $CPfileName
         $CPTName = "CPT - " + $CleanedCPFileName
         $filePath = $filePathBase + $CPTName + '.xml'
-        $AdfsClaimsProviderTrust | Export-Clixml $filePath -ErrorAction SilentlyContinue
+        $AdfsClaimsProviderTrust | Export-Clixml -LiteralPath $filePath -ErrorAction SilentlyContinue
  
     } 
 
