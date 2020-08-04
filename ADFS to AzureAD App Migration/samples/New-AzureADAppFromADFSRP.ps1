@@ -2,8 +2,7 @@ Import-Module AzureAD
 Import-Module .\ADFS2AADUtils.psm1
 
 #Connect to both Azure AD Powershell and MS Graph API Client library
-Connect-MSGraphAPI | Out-Null
-Connect-AzureAD | Out-Null
+Start-ADFS2AADSession
 
 ##Replace this values
 $targetGalleryApp = "GalleryAppName"
