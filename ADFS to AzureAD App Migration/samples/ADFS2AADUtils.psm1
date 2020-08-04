@@ -9,7 +9,7 @@
 
 .DESCRIPTION
 
-	Version: 1.0.0
+	Version: 0.0.1
 
     ADFS2AADUtils.psm1 is a Windows PowerShell module to help migrating AD FS configuration to Azure AD.
     
@@ -64,7 +64,27 @@ function Get-MSCloudIdAccessToken {
     Write-Output $MsalToken
 }
 
+<# 
+ .Synopsis
+  Creates a new Azure AD Application from and AD FS Relying party trust and the Application Gallery
+  as documented in aka.ms/aadgallery-sso-api
 
+
+ .Description
+  This function queries the Azure AD Gallery App using MS Graph
+ .Parameter TenantId
+  Tenant ID we want to connect
+  .Parameter ClientID
+  Client ID of the Client used to connect
+  .Parameter RedirectUri
+  Redirect URI of the Client used to connect
+  .Parameter Scopes
+  Scopes requested in the connection
+
+  .Example
+  Connect to MS Graph with defaults
+  Connect-MSGraphAPI
+#>
 function Connect-MSGraphAPI {
     [CmdletBinding()]
     param (
@@ -243,10 +263,11 @@ function Invoke-MSGraphQuery {
 
 <# 
  .Synopsis
-  Starts the sessions to AzureAD and MSOnline Powershell Modules
+  Start a session  to AzureAD and MS Graph Client Library
 
  .Description
-  This function prompts for authentication against azure AD 
+  This function prompts for authentication using MSAL.PS and reuses the same token to connect
+  to Azure AD Powershell
 
 #>
 function Start-ADFS2AADSession		
@@ -266,10 +287,24 @@ function Start-ADFS2AADSession
     Write-Output "Session Started!"
 }
 
-###########################################
+#################################################################################
 # Wrappers for app management  as documented in https://aka.ms/aadgallery-sso-api 
-###########################################
+#################################################################################
 
+<# 
+ .Synopsis
+  Creates a new Azure AD Application from and AD FS Relying party trust and the Application Gallery
+  as documented in aka.ms/aadgallery-sso-api
+
+
+ .Description
+  This function queries the Azure AD Gallery App using MS Graph
+ .Parameter DisplayNameFilter
+  Filter for the search in the gallery . This is case sensitive and will be used as a "startsWith" filter
+
+  .Example
+  Get-AzureADApplicationTemplate -DisplayNameFilter ContosoERP
+#>
 function Get-AzureADApplicationTemplate {
     [CmdletBinding()]
     param (
@@ -731,7 +766,55 @@ function New-AzureADCustomSigningKeyFromPfx
     Write-Output $result
 }
 
+<# 
+ .Synopsis
+  Creates a new Azure AD Application from and AD FS Relying party trust and the Application Gallery
+  as documented in aka.ms/aadgallery-sso-api
 
+
+ .Description
+  This function creates an Azure AD Application from an AD FS Relying Party Trust as follows:
+  * It instantiates the app gallery template, which creates an Application and a Service Principal Object using
+    Microsoft Graph
+  * It reads the AD FS RP trust issuance transformation rules and creates the claims mapping policy; it  
+    supports basic attribute to claim mapping. 
+  * It copies identifiers and endpoints from the AD FS Relying party trust
+  * It creates a self-signed certificate for token signing 
+  * Takes a group and assigns it to the created app with the specified role
+
+  To call this function, you should have started a session with 
+
+ .Parameter AzureADAppTemplateId
+  Object Id of the app gallery. This can be retrieved using the Get-AzureADApplicationTemplate function in this module
+
+  .Parameter ADFSRelyingPartyTrust
+  RP Trust object, returned by the AD FS Get-ADFSRelyingPartyTrust Powershell cmdlet
+
+  .Parameter TestGroupAssignmentObjectId
+  Object ID of the Azure AD Group that will be assigned to the application. This can be retrieved by the Get-AzureADGroup 
+  cmdlet from the AzureAD Poweshell module. 
+
+  .Parameter TestGroupAssignmentRoleName
+  Name of the role that will be assigned. 
+
+ .Example
+    Start-ADFS2AADSession
+
+    $targetGalleryApp = "GalleryAppName"
+    $targetGroup = Get-AzureADGroup -SearchString "TestGroupName"
+    $targetAzureADRole = "TestRoleName"
+    $targetADFSRPId = "ADFSRPIdentifier"
+
+    $galleryApp = Get-AzureADApplicationTemplate -DisplayNameFilter $targetGalleryApp
+
+    $RP=Get-AdfsRelyingPartyTrust -Identifier $targetADFSRPId
+
+    New-AzureADAppFromADFSRPTrust `
+        -AzureADAppTemplateId $galleryApp.id `
+        -ADFSRelyingPartyTrust $RP `
+        -TestGroupAssignmentObjectId $targetGroup.ObjectId `
+        -TestGroupAssignmentRoleName $targetAzureADRole
+#>
 
 function New-AzureADAppFromADFSRPTrust {
     [CmdletBinding()]
@@ -889,7 +972,7 @@ function New-AzureADAppFromADFSRPTrust {
         }
         catch 
         {
-            Write-Debug "Did not read backclaims mapping policy ... sleeping $millisecondsWait milliseconds"
+            Write-Debug "Did not read back claims mapping policy ... sleeping $millisecondsWait milliseconds"
             Start-Sleep -Milliseconds $millisecondsWait
             $millisecondsWait *= 2
         }
@@ -914,7 +997,7 @@ function New-AzureADAppFromADFSRPTrust {
 
 }
 
-
-
-
-
+Export-ModuleMember -Function Connect-MSGraphAPI
+Export-ModuleMember -Function Start-ADFS2AADSession	
+Export-ModuleMember -Function Get-AzureADApplicationTemplate
+Export-ModuleMember -Function New-AzureADAppFromADFSRPTrust
