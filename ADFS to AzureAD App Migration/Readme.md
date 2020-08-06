@@ -54,7 +54,7 @@ a workstation or server where Excel is installed.
         - ClaimTypes.csv
         - RuleDetails.csv
    7. On a workstation that has Excel installed, create a folder at c:\adfs and place the above .csv files in this folder
-   8. From this same workstation, open this Excel spreadsheet and navigate to the Dashboard tab and hit the Refresh Data button on the right.
+   8. From this same workstation, open "ADFS to AAD App Migration Report Template.xlsm" in Excel and navigate to the Dashboard tab and hit the Refresh Data button on the right.
 
 **Note:** If you want to re-export and re-analyze the data, just repeat Steps 5-7 and overwrite files in Step 6 with new files
 
@@ -85,7 +85,8 @@ a workstation or server where Excel is installed.
         - AttributeStores.csv
         - ClaimTypes.csv
         - RuleDetails.csv
-   8. On a workstation that has Excel installed, create a folder at c:\adfs and place the above .csv files in this folder    9. From this same workstation, open this Excel spreadsheet and navigate to the Dashboard tab and hit the Refresh Data button on the right.
+   8. On a workstation that has Excel installed, create a folder at c:\adfs and place the above .csv files in this folder    
+   9. From this same workstation, open "ADFS to AAD App Migration Report Template.xlsm" in Excel and navigate to the Dashboard tab and hit the Refresh Data button on the right.
 
 **Note:** If you want to re-export and re-analyze the data, just repeat Steps 7-10 and overwrite files in Step 6 with new files.
 
