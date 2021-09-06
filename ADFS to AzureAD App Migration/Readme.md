@@ -69,7 +69,7 @@ a workstation or server where Excel is installed.
       - `ipmo .\\ADFSAADMigrationUtils.psm1`
       - `Export-ADFS2AADOnPremConfiguration`
 
-#### **Run Analysis From Another Server **
+#### **Run Analysis From Another ADFS Server **
 
    1. Copy c:\ADFS\ADFSApps.zip from your ADFS server to another ADFSserver where you want to run analysis
    2. On this other ADFS server, unzip the .XML files to a folder of your choosing
