@@ -120,7 +120,7 @@ Additionally, from this same tab, we include the following items per application
 
 -   **Custom Attribute Stores:** Azure AD now supports custom authentication
     extensions that allows customers to use other attribute stores beyond Azure
-    AD attributes, for more information on how to configure these attributes and the current requirements visit     [https://learn.microsoft.com/azure/active-directory/develop/custom-extension-overview](custom extension overview}.
+    AD attributes, for more information on how to configure these attributes and the current requirements visit     [https://learn.microsoft.com/azure/active-directory/develop/custom-extension-overview](custom extension overview).
 
 ![](Media/image4.png)
 
