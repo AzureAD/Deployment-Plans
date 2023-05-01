@@ -1,14 +1,3 @@
-Take our survey to shape the future; we’d love your feedback!
-=============================================================
-
-**If you want to shape the future of apps in Azure AD directly, take our
-survey!**
-
-<http://aka.ms/apps-survey>
-
-We’re always listening, and if you want to get in touch with us
-directly, send an email to <aadappfeedback@microsoft.com>.
-
 ADFS to Azure AD App Migration Tool Instructions
 ====================================
 
