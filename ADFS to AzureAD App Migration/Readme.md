@@ -1,14 +1,3 @@
-Take our survey to shape the future; we’d love your feedback!
-=============================================================
-
-**If you want to shape the future of apps in Azure AD directly, take our
-survey!**
-
-<http://aka.ms/apps-survey>
-
-We’re always listening, and if you want to get in touch with us
-directly, send an email to <aadappfeedback@microsoft.com>.
-
 ADFS to Azure AD App Migration Tool Instructions
 ====================================
 
@@ -18,22 +7,18 @@ The ADFS to AAD App Migration tool consists of three steps:
 
 ### **Collect**
 First, we collect the relying party applications from your ADFS server.
-This is done via a PowerShell module that will need to run on one of
+This is done via a PowerShell module that must run on one of
 your ADFS server and it writes the configuration of each application to
 the file system as individual .XML files
 
 ### **Analyze**
 Next, our PowerShell module will enumerate through the individual .XML
 files and check the configuration of various settings. This analysis can
-be done directly on your ADFS server or can be done on another ADFS
-server but currently, it requires ADFS be installed to properly process
-the configuration.
+be done directly on your primary ADFS server or on a different ADFS
+server. However, it is necessary for ADFS to be installed to process the configuration. 
 
 ### **Report**
-Lastly, we generate a final Excel report of your relying party
-applications that outlines which applications can be migrated to Azure
-AD and which ones can’t and why they can’t. This part has to be run from
-a workstation or server where Excel is installed.
+Finally, we produce an Excel report of your relying party applications that indicates which ones are eligible for migration to Azure AD and which ones are not, along with an explanation of why they cannot be migrated. To generate this report, Excel must be installed on the workstation or server being used.
 
 # **Collect & Analyze**
 
@@ -47,13 +32,13 @@ a workstation or server where Excel is installed.
        - `ipmo .\\ADFSAADMigrationUtils.psm1`
        - `Export-ADFS2AADOnPremConfiguration`
        - `Test-ADFS2AADOnPremRPTrustSet -RPXMLFileDirectory "C:\adfs\apps"`     
-   6. Collect the following files from the ADFS server. They will be in the same folder that you changed directories to in Step 4.
+   6. Collect the following files from the ADFS server. These files are located in the same folder you used in Step 4.
         - ADFSRPConfiguration.csv
         - Attributes.csv
         - AttributeStores.csv
         - ClaimTypes.csv
         - RuleDetails.csv
-   7. On a workstation that has Excel installed, create a folder at c:\adfs and place the above .csv files in this folder
+   7. On a workstation that has Excel installed, create a folder at c:\adfs and place the .csv files collected from the previous step in this folder
    8. From this same workstation, open "ADFS to AAD App Migration Report Template.xlsm" in Excel and navigate to the Dashboard tab and hit the Refresh Data button on the right.
 
 **Note:** If you want to re-export and re-analyze the data, just repeat Steps 5-7 and overwrite files in Step 6 with new files
@@ -85,7 +70,7 @@ a workstation or server where Excel is installed.
         - AttributeStores.csv
         - ClaimTypes.csv
         - RuleDetails.csv
-   8. On a workstation that has Excel installed, create a folder at c:\adfs and place the above .csv files in this folder    
+   8. On a workstation that has Excel installed, create a folder at c:\adfs and place the .csv files collected from the previous step in this folder.   
    9. From this same workstation, open "ADFS to AAD App Migration Report Template.xlsm" in Excel and navigate to the Dashboard tab and hit the Refresh Data button on the right.
 
 **Note:** If you want to re-export and re-analyze the data, just repeat Steps 7-10 and overwrite files in Step 6 with new files.
@@ -133,9 +118,9 @@ Additionally, from this same tab, we include the following items per application
     rules contains any of these restricted claim type URI’s. This is
     more informational than anything.
 
--   **Custom Attribute Stores:** Azure AD doesn’t currently support any
-    custom attribute stores so if you’re using anything beyond ‘Active
-    Directory’ within your claim rules, we give you that count here.
+-   **Custom Attribute Stores:** Azure AD now supports custom authentication
+    extensions that allows customers to use other attribute stores beyond Azure
+    AD attributes, for more information on how to configure these attributes and the current requirements, see [custom extension overview](https://learn.microsoft.com/azure/active-directory/develop/custom-extension-overview).
 
 ![](Media/image4.png)
 
@@ -275,9 +260,6 @@ Enterprise Mobility and
 Security](https://docs.microsoft.com/en-us/enterprise-mobility-security/solutions/enterprise-mobility-fasttrack-program)
 
 **Engage the Product Engineering Team:** If you are working on a major customer deployment with millions of users, you can work with your Microsoft account team or your Cloud Solutions Architect to decide if the project’s deployment complexity warrants working directly with the Azure Identity Product Engineering team.
-
-**EMS Blog:** Subscribe to the [EMS
-Blog](https://cloudblogs.microsoft.com/enterprisemobility/?product=azure-active-directory) to stay up to date with all the latest product announcements, deep dives, and roadmap information provided directly by the Identity engineering team. Further, you can also post comments and get feedback from the engineering group.
 
 **Azure Active Directory Public Forums:** Azure AD also has several closely monitored channels available to the public. Here are some useful links:
 
